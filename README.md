@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Business Performance Dashboard
 
-## Getting Started
+A small internal tool for uploading CSV exports and viewing key business
+metrics, trends, and rule-based insights. Built with Next.js 14 (App Router),
+Tailwind CSS, PapaParse, and Recharts. No backend, no database — everything
+runs client-side in the browser.
 
-First, run the development server:
+## Running locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). You'll be redirected to
+`/login`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Login credentials
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Credentials are read from environment variables (not hardcoded in the repo).
+A `.env.local` file is used locally — copy the example file to get started:
 
-## Learn More
+```bash
+cp .env.local.example .env.local
+```
 
-To learn more about Next.js, take a look at the following resources:
+Default values in `.env.local.example`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Change these to whatever you like. `.env.local` is gitignored and never
+committed.
 
-## Deploy on Vercel
+## CSV format
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The uploader expects a CSV with these columns (header names are matched
+case-insensitively, and spaces/dashes/underscores are treated the same, so
+`Website Visits`, `website_visits`, and `WEBSITE-VISITS` all work):
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Column           | Type   | Description                        |
+| ---------------- | ------ | ----------------------------------- |
+| `date`           | text   | Any date string, e.g. `2026-07-01`  |
+| `leads`          | number | Leads generated that day            |
+| `calls`          | number | Calls made that day                 |
+| `website_visits` | number | Website visits that day             |
+| `revenue`        | number | Revenue generated that day          |
+
+Example:
+
+```csv
+date,leads,calls,website_visits,revenue
+2026-07-01,12,20,600,2400
+2026-07-02,15,18,720,3100
+```
+
+Click **Download Sample CSV** on the dashboard to get a ready-to-use file.
+
+You can upload a **Current Period** CSV on its own, or also upload a
+**Previous Period** CSV to see side-by-side comparisons and % change
+indicators.
+
+### Metrics shown
+
+- **Total Leads** — sum of `leads`
+- **Total Calls** — sum of `calls`
+- **Website Visits** — sum of `website_visits`
+- **Revenue** — sum of `revenue`
+- **Conversion Rate** — `(Total Leads / Total Website Visits) × 100`
+
+### Error handling
+
+- Non-`.csv` files are rejected with a message.
+- Empty files are rejected with a message.
+- Missing required columns are listed by name.
+- Rows with missing or non-numeric values are skipped, and a count of
+  skipped rows is shown (the rest of the file still loads).
+- Parsing is wrapped in try/catch so a bad file never produces a blank
+  screen — you'll always see an inline error instead.
+
+## Deploying to Vercel
+
+1. Push this repo to GitHub.
+2. Go to [vercel.com](https://vercel.com) and sign up/log in with your GitHub
+   account.
+3. Click **Add New → Project**, and import this GitHub repository.
+4. In the **Environment Variables** section of the import screen, add:
+   - `ADMIN_USERNAME` = your chosen username
+   - `ADMIN_PASSWORD` = your chosen password
+5. Click **Deploy**. Vercel will build and host the app automatically —
+   no other configuration is needed since there's no database or backend.
+6. Once deployed, visit your Vercel URL, which will redirect you to
+   `/login`.
+
+Any time you push to the connected branch, Vercel redeploys automatically.
